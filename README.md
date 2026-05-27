@@ -19,14 +19,14 @@ to deliver an engaging and intelligent analytics platform.
 
 # ✨ Key Features
 
-✅ Interactive Streamlit Dashboard
-✅ Relationship Compatibility Prediction
-✅ Dataset Exploration & Analysis
-✅ Machine Learning Workflow Visualization
-✅ Model Evaluation & Performance Insights
-✅ Modern UI with Glassmorphism Design
-✅ Responsive Dashboard Layout
-✅ Dark Blue & Pink Gradient Theme
+* Interactive Streamlit Dashboard
+Relationship Compatibility Prediction
+Dataset Exploration & Analysis
+Machine Learning Workflow Visualization
+Model Evaluation & Performance Insights
+Modern UI with Glassmorphism Design
+Responsive Dashboard Layout
+Dark Blue & Pink Gradient Theme
 
 ---
 
