@@ -207,7 +207,7 @@ The application will automatically open in your browser.
 
 # 👥 Team Members
 
-Jasmine Chin Ying Hui | Lee Jian Cheng | Ng Yue Qhi | Nurul Afyqah binti Lukman | Ratu Ahdys Khairany  Tan Pei Shing
+Jasmine Chin Ying Hui | Lee Jian Cheng | Ng Yue Qhi | Nurul Afyqah binti Lukman | Ratu Ahdys Khairany | Tan Pei Shing
 
 ---
 
