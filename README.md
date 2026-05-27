@@ -1,35 +1,59 @@
-# LoveLens 💕
+# 💕 LoveLens
 
-## Overview
+### Intelligent Relationship Compatibility Prediction Dashboard
 
-LoveLens is a machine learning-powered dashboard designed to analyze relationship compatibility and predict match outcomes using behavioral and personality-based features from online dating application data.
-
-The project combines data analytics, machine learning, and interactive visualization through a modern Streamlit dashboard interface.
-
----
-
-# Features
-
-* Interactive Streamlit dashboard
-* Relationship compatibility prediction
-* Dataset exploration and analysis
-* Machine learning workflow visualization
-* Model performance evaluation
-* Modern UI with custom styling and animations
-* Responsive dashboard layout
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python">
+  <img src="https://img.shields.io/badge/Streamlit-Dashboard-ff4b8b?style=for-the-badge&logo=streamlit">
+  <img src="https://img.shields.io/badge/Machine-Learning-darkblue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge">
+</p>
 
 ---
 
-# Dataset Information
+## 📌 Overview
 
-The dataset contains behavioral and demographic features collected from online dating application interactions.
+**LoveLens** is a modern machine learning dashboard developed to analyze relationship compatibility and predict dating match outcomes using behavioral and personality-based features collected from online dating applications.
 
-### Dataset Size
+The project combines:
 
-* **Rows:** 50,000
-* **Columns:** 19
+* Machine Learning
+* Interactive Data Visualization
+* Predictive Analytics
+* Streamlit Dashboard Development
 
-### Features Included
+to deliver an engaging and intelligent analytics platform.
+
+---
+
+# ✨ Key Features
+
+✅ Interactive Streamlit Dashboard
+✅ Relationship Compatibility Prediction
+✅ Dataset Exploration & Analysis
+✅ Machine Learning Workflow Visualization
+✅ Model Evaluation & Performance Insights
+✅ Modern UI with Glassmorphism Design
+✅ Responsive Dashboard Layout
+✅ Dark Blue & Pink Gradient Theme
+
+---
+
+# 📊 Dataset Information
+
+The dataset contains behavioral and demographic information extracted from dating application interactions.
+
+## Dataset Statistics
+
+| Metric          | Value           |
+| --------------- | --------------- |
+| Total Rows      | 50,000          |
+| Total Columns   | 19              |
+| Target Variable | `match_outcome` |
+
+---
+
+## 📂 Features Included
 
 * Gender
 * Sexual Orientation
@@ -41,48 +65,56 @@ The dataset contains behavioral and demographic features collected from online d
 * Swipe Right Ratio
 * Likes Received
 * Mutual Matches
+* Profile Picture Count
 * Bio Length
-* Message Count
+* Message Sent Count
 * Emoji Usage Rate
 * Last Active Hour
+* Swipe Time of Day
 * Match Outcome
-* And more
-
-### Target Variable
-
-`match_outcome`
 
 ---
 
-# Technologies Used
+# 🧠 Machine Learning Workflow
 
-* Python
-* Streamlit
-* Pandas
-* Scikit-learn
-* Plotly
-* NumPy
-
----
-
-# Machine Learning Workflow
-
-1. Data Collection
-2. Data Preprocessing
-3. Exploratory Data Analysis
-4. Feature Engineering
-5. Model Training
-6. Model Evaluation
-7. Dashboard Deployment
+```text
+Data Collection
+        ↓
+Data Preprocessing
+        ↓
+Exploratory Data Analysis
+        ↓
+Feature Engineering
+        ↓
+Model Training
+        ↓
+Model Evaluation
+        ↓
+Prediction Dashboard Deployment
+```
 
 ---
 
-# Project Structure
+# 🛠 Technologies Used
+
+| Technology   | Purpose                   |
+| ------------ | ------------------------- |
+| Python       | Core Programming Language |
+| Streamlit    | Dashboard Development     |
+| Pandas       | Data Processing           |
+| Scikit-learn | Machine Learning          |
+| Plotly       | Interactive Visualization |
+| NumPy        | Numerical Computing       |
+
+---
+
+# 📁 Project Structure
 
 ```bash
 LoveLens/
 │
 ├── app.py
+│
 ├── pages/
 │   ├── predictor.py
 │   ├── analytics.py
@@ -100,21 +132,25 @@ LoveLens/
 
 ---
 
-# Installation
+# 🚀 Installation Guide
 
-## Clone the Repository
+## 1️⃣ Clone Repository
 
 ```bash
 git clone https://github.com/jasmineyh/LoveLens.git
 ```
 
-## Navigate to the Project Folder
+---
+
+## 2️⃣ Navigate to Project Directory
 
 ```bash
 cd LoveLens
 ```
 
-## Install Dependencies
+---
+
+## 3️⃣ Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -122,64 +158,81 @@ pip install -r requirements.txt
 
 ---
 
-# Running the Application
+# ▶️ Running the Application
 
-Start the Streamlit dashboard:
+Launch the Streamlit dashboard:
 
 ```bash
 streamlit run app.py
 ```
 
-The application will launch automatically in your browser.
+The application will automatically open in your browser.
 
 ---
 
-# Dashboard Pages
+# 🖥 Dashboard Modules
 
-## Home
+## 🏠 Home
 
 * Project overview
 * Dataset statistics
 * Workflow visualization
-* Model summary
+* Dashboard introduction
 
-## Dataset Overview
+---
+
+## 📊 Dataset Overview
 
 * Dataset preview
-* Feature information
+* Feature descriptions
 * Data types
 * Missing value analysis
 
-## Prediction System
+---
 
-* User input prediction interface
+## 🤖 Prediction System
+
+* User input interface
 * Match outcome prediction
+* Machine learning inference
 
-## Analytics & Visualization
+---
 
-* Interactive charts
+## 📈 Analytics & Visualization
+
 * Behavioral analysis
-* Feature insights
+* Interactive charts
+* Data insights
+* User activity trends
 
-## Model Evaluation
+---
+
+## 📉 Model Evaluation
 
 * Accuracy metrics
-* Confusion matrix
-* Performance visualization
+* Performance analysis
+* Model comparison
+* Evaluation visualization
 
 ---
 
-# Future Improvements
+# 🌟 Future Improvements
 
-* Real-time prediction API
-* User authentication
-* Advanced recommendation system
-* Deep learning integration
-* Cloud deployment
-* Mobile responsive optimization
+* Real-time Prediction API
+* User Authentication System
+* Deep Learning Integration
+* Cloud Deployment
+* Advanced Recommendation Engine
+* Mobile Responsive Optimization
 
 ---
 
-# Team Members
+# 👥 Team Members
 
-*Jasmine Chin Ying Hui | Lee Jian Cheng | Ng Yue Qhi | Nurul Afyqah binti Lukman | Ratu Ahdys Khairany | Tan Pei Shing
+Jasmine Chin Ying Hui | Lee Jian Cheng | Ng Yue Qhi | Nurul Afyqah binti Lukman | Ratu Ahdys Khairany  Tan Pei Shing
+
+---
+
+# 💖 LoveLens
+
+> “Turning relationship data into meaningful compatibility insights.”
