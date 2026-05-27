@@ -2,15 +2,6 @@
 
 ### Intelligent Relationship Compatibility Prediction Dashboard
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python">
-  <img src="https://img.shields.io/badge/Streamlit-Dashboard-ff4b8b?style=for-the-badge&logo=streamlit">
-  <img src="https://img.shields.io/badge/Machine-Learning-darkblue?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge">
-</p>
-
----
-
 ## 📌 Overview
 
 **LoveLens** is a modern machine learning dashboard developed to analyze relationship compatibility and predict dating match outcomes using behavioral and personality-based features collected from online dating applications.
