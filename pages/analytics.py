@@ -537,7 +537,6 @@ def render_metric_cards(df: pd.DataFrame, snapshot: dict) -> None:
 		grad_a, grad_b = metric["gradient"]
 		rgba_a = hex_to_rgba(grad_a, 0.4)
 		rgba_b = hex_to_rgba(grad_b, 0.4)
-		icon = metric["icon"]
 		label = metric["label"]
 		value = metric["value"]
 		note = metric["note"]
@@ -545,7 +544,6 @@ def render_metric_cards(df: pd.DataFrame, snapshot: dict) -> None:
 		<div style="border-radius:14px;padding:14px;background:linear-gradient(135deg,{rgba_a}, {rgba_b});color:rgba(255,255,255,0.98);box-shadow:0 10px 30px rgba(2,6,23,0.6);">
 			<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
 				<div style="font-size:0.84rem;font-weight:700;opacity:0.95;">{label}</div>
-				<div style="font-size:1.45rem;">{icon}</div>
 			</div>
 			<div style="font-size:1.65rem;font-weight:900;margin-top:8px;line-height:1;">{value}</div>
 			<div style="font-size:0.78rem;opacity:0.92;margin-top:6px;color:rgba(255,255,255,0.92);">{note}</div>
