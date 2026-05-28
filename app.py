@@ -4,6 +4,8 @@ import joblib
 import json
 from pathlib import Path
 
+from pages.analytics import render_analytics_page
+
 ROOT = Path(__file__).resolve().parent
 
 
@@ -100,6 +102,12 @@ section[data-testid="stSidebar"] {
 
 section[data-testid="stSidebar"] * {
     color: white !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stSidebarNav"],
+section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"],
+section[data-testid="stSidebar"] nav {
+    display: none !important;
 }
 
 /* =====================================================
@@ -401,7 +409,7 @@ else:
     )
 
     if feature_page == "Visualization Analytics":
-        st.switch_page("pages/analytics.py")
+        render_analytics_page()
         st.stop()
 
     feature_to_page = {

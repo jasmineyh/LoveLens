@@ -1,26 +1,28 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import json
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import plotly.graph_objects as go
+import joblib
 import streamlit as st
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-
-
-st.set_page_config(
-	page_title="Data Insights Dashboard",
-	page_icon="📊",
-	layout="wide",
-	initial_sidebar_state="expanded",
-)
-
 ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = ROOT / "data" / "dating_app_behavior_dataset.csv"
+
+
+def resolve_asset_path(relative_path: Path | str) -> Path:
+	candidate = ROOT / Path(relative_path)
+	if candidate.exists():
+		return candidate
+	if Path(relative_path).exists():
+		return Path(relative_path)
+	raise FileNotFoundError(f"Asset not found: {relative_path}")
 
 PALETTE = {
 	"pink": "#f05cc4",
@@ -64,15 +66,6 @@ def apply_theme() -> None:
 			padding-top: 1.15rem;
 			padding-bottom: 1.4rem;
 			max-width: 1320px;
-		}
-
-		section[data-testid="stSidebar"],
-		div[data-testid="stSidebar"] {
-			display: none;
-		}
-
-		header[data-testid="stHeader"] {
-			display: none;
 		}
 
 		[data-testid="stSidebar"] {
@@ -299,56 +292,100 @@ def load_data() -> pd.DataFrame:
 	return df
 
 
+@st.cache_resource(show_spinner=False)
+def load_model_assets():
+	model = joblib.load(resolve_asset_path(Path("source_code") / "best_xgb_model.pkl"))
+	scaler = joblib.load(resolve_asset_path(Path("source_code") / "scaler.pkl"))
+	with open(resolve_asset_path(Path("source_code") / "model_columns.json"), "r") as f:
+		model_columns = json.load(f)
+	return model, scaler, model_columns
+
+
+def prepare_model_frame(data: pd.DataFrame, scaler, model_columns: list[str]) -> pd.DataFrame:
+	frame = data.copy()
+	frame["interest_count"] = (
+		frame["interest_tags"]
+		.fillna("")
+		.astype(str)
+		.str.split(",")
+		.apply(lambda items: sum(1 for item in items if item.strip()))
+	)
+	frame["profile_richness"] = frame["profile_pics_count"].fillna(0) + (frame["bio_length"].fillna(0) / 100.0)
+	frame["engagement_efficiency"] = frame["mutual_matches"].fillna(0) / (frame["message_sent_count"].fillna(0) + 1)
+	frame["emoji_intensity"] = frame["emoji_usage_rate"].fillna(0) * (frame["message_sent_count"].fillna(0) + 1)
+
+	numeric_columns = model_columns[:13]
+	feature_frame = pd.DataFrame(index=frame.index)
+	feature_frame["app_usage_time_min"] = frame["app_usage_time_min"].fillna(0)
+	feature_frame["swipe_right_ratio"] = frame["swipe_right_ratio"].fillna(0)
+	feature_frame["likes_received"] = frame["likes_received"].fillna(0)
+	feature_frame["mutual_matches"] = frame["mutual_matches"].fillna(0)
+	feature_frame["profile_pics_count"] = frame["profile_pics_count"].fillna(0)
+	feature_frame["bio_length"] = frame["bio_length"].fillna(0)
+	feature_frame["message_sent_count"] = frame["message_sent_count"].fillna(0)
+	feature_frame["emoji_usage_rate"] = frame["emoji_usage_rate"].fillna(0)
+	feature_frame["last_active_hour"] = frame["last_active_hour"].fillna(0)
+	feature_frame["interest_count"] = frame["interest_count"].fillna(0)
+	feature_frame["profile_richness"] = frame["profile_richness"].fillna(0)
+	feature_frame["engagement_efficiency"] = frame["engagement_efficiency"].fillna(0)
+	feature_frame["emoji_intensity"] = frame["emoji_intensity"].fillna(0)
+
+	interest_labels = [column for column in model_columns if column in set(frame["interest_tags"].fillna("").astype(str).str.split(",").explode().str.strip())]
+	interest_tokens = set(frame["interest_tags"].fillna("").astype(str).str.split(",").explode().str.strip())
+	for label in [column for column in model_columns if column in interest_tokens or column in model_columns[13:]]:
+		if label in {"gender_Genderfluid", "gender_Male", "gender_Non-binary", "gender_Prefer Not to Say", "gender_Transgender", "sexual_orientation_Bisexual", "sexual_orientation_Demisexual", "sexual_orientation_Gay", "sexual_orientation_Lesbian", "sexual_orientation_Pansexual", "sexual_orientation_Queer", "sexual_orientation_Straight", "location_type_Remote Area", "location_type_Rural", "location_type_Small Town", "location_type_Suburban", "location_type_Urban", "income_bracket_Low", "income_bracket_Lower-Middle", "income_bracket_Middle", "income_bracket_Upper-Middle", "income_bracket_Very High", "income_bracket_Very Low", "education_level_Bachelor’s", "education_level_Diploma", "education_level_High School", "education_level_MBA", "education_level_Master’s", "education_level_No Formal Education", "education_level_PhD", "education_level_Postdoc", "swipe_time_of_day_Afternoon", "swipe_time_of_day_Early Morning", "swipe_time_of_day_Evening", "swipe_time_of_day_Late Night", "swipe_time_of_day_Morning"}:
+			continue
+
+	# One-hot columns from the raw categorical fields.
+	gender_dummies = pd.get_dummies(frame["gender"].fillna(""), prefix="gender")
+	orientation_dummies = pd.get_dummies(frame["sexual_orientation"].fillna(""), prefix="sexual_orientation")
+	location_dummies = pd.get_dummies(frame["location_type"].fillna(""), prefix="location_type")
+	income_dummies = pd.get_dummies(frame["income_bracket"].fillna(""), prefix="income_bracket")
+	education_dummies = pd.get_dummies(frame["education_level"].fillna(""), prefix="education_level")
+	time_dummies = pd.get_dummies(frame["swipe_time_of_day"].fillna(""), prefix="swipe_time_of_day")
+	interest_dummies = pd.DataFrame(0, index=frame.index, columns=[column for column in model_columns if column in model_columns[13:] and not column.startswith(("gender_", "sexual_orientation_", "location_type_", "income_bracket_", "education_level_", "swipe_time_of_day_"))])
+	for label in interest_dummies.columns:
+		interest_dummies[label] = frame["interest_tags"].fillna("").astype(str).str.contains(rf"(?<!\w){label}(?!\w)", regex=True).astype(int)
+
+	combined = pd.concat([
+		feature_frame,
+		interest_dummies,
+		gender_dummies,
+		orientation_dummies,
+		location_dummies,
+		income_dummies,
+		education_dummies,
+		time_dummies,
+	], axis=1)
+
+	for column in model_columns:
+		if column not in combined.columns:
+			combined[column] = 0
+
+	combined = combined.reindex(columns=model_columns)
+	combined[numeric_columns] = scaler.transform(combined[numeric_columns].astype(float))
+	return combined
+
+
 @st.cache_data(show_spinner=False)
-def train_model_snapshot(data: pd.DataFrame) -> dict:
-	target = data["match_outcome"].astype(str)
+def build_model_snapshot(data: pd.DataFrame) -> dict:
+	model, scaler, model_columns = load_model_assets()
+	feature_frame = prepare_model_frame(data, scaler, model_columns)
+	y_true = (data["match_outcome"].astype(str).str.strip() == "Mutual Match").astype(int)
+	y_pred = model.predict(feature_frame)
 
-	feature_frame = data.drop(columns=["match_outcome", "interest_tags"]).copy()
-	feature_frame["interest_count"] = data["interest_count"]
-
-	categorical_columns = feature_frame.select_dtypes(include=["object"]).columns.tolist()
-
-	encoded = pd.get_dummies(feature_frame, columns=categorical_columns, drop_first=False)
-	encoded = encoded.fillna(0)
-
-	label_encoder = LabelEncoder()
-	y = pd.Series(label_encoder.fit_transform(target), index=encoded.index)
-
-	sample_size = min(len(encoded), 18000)
-	sample_index = encoded.sample(n=sample_size, random_state=42).index
-	X_sample = encoded.loc[sample_index]
-	y_sample = y.loc[sample_index]
-
-	class_counts = y_sample.value_counts()
-	stratify_target = y_sample if class_counts.min() >= 2 else None
-
-	X_train, X_test, y_train, y_test = train_test_split(
-		X_sample,
-		y_sample,
-		test_size=0.2,
-		random_state=42,
-		stratify=stratify_target,
-	)
-
-	model = RandomForestClassifier(
-		n_estimators=140,
-		max_depth=14,
-		min_samples_leaf=2,
-		random_state=42,
-		n_jobs=-1,
-	)
-	model.fit(X_train, y_train)
-
-	y_pred = model.predict(X_test)
-
-	feature_importances = pd.Series(model.feature_importances_, index=X_train.columns)
+	feature_importances = pd.Series(model.feature_importances_, index=model_columns)
 	grouped: dict[str, float] = {}
 	for column_name, importance in feature_importances.items():
 		base_name = column_name
-		for categorical_name in categorical_columns:
-			if column_name.startswith(f"{categorical_name}_"):
-				base_name = categorical_name
+		for prefix in ["gender_", "sexual_orientation_", "location_type_", "income_bracket_", "education_level_", "swipe_time_of_day_"]:
+			if column_name.startswith(prefix):
+				base_name = prefix[:-1]
 				break
+		if column_name in {"app_usage_time_min", "swipe_right_ratio", "likes_received", "mutual_matches", "profile_pics_count", "bio_length", "message_sent_count", "emoji_usage_rate", "last_active_hour", "interest_count", "profile_richness", "engagement_efficiency", "emoji_intensity"}:
+			base_name = column_name
+		elif base_name == column_name:
+			base_name = "interest_tags"
 		grouped[base_name] = grouped.get(base_name, 0.0) + float(importance)
 
 	feature_df = (
@@ -358,12 +395,13 @@ def train_model_snapshot(data: pd.DataFrame) -> dict:
 	)
 
 	return {
-		"accuracy": accuracy_score(y_test, y_pred),
-		"precision": precision_score(y_test, y_pred, average="macro", zero_division=0),
-		"recall": recall_score(y_test, y_pred, average="macro", zero_division=0),
-		"f1": f1_score(y_test, y_pred, average="macro", zero_division=0),
+		"accuracy": accuracy_score(y_true, y_pred),
+		"precision": precision_score(y_true, y_pred, zero_division=0),
+		"recall": recall_score(y_true, y_pred, zero_division=0),
+		"f1": f1_score(y_true, y_pred, zero_division=0),
 		"features": feature_df,
-		"classes": label_encoder.classes_.tolist(),
+		"classes": model.classes_.tolist(),
+		"target_positive_label": "Mutual Match",
 	}
 
 
@@ -377,7 +415,7 @@ def figure_style(fig: plt.Figure) -> plt.Figure:
 	return fig
 
 
-def build_donut_chart(title: str, series: pd.Series, colors: list[str], subtitle: str) -> go.Figure:
+def build_donut_chart(title: str, series: pd.Series, colors: list[str]) -> go.Figure:
 	fig = go.Figure(
 		data=[
 			go.Pie(
@@ -385,7 +423,7 @@ def build_donut_chart(title: str, series: pd.Series, colors: list[str], subtitle
 				values=series.values.tolist(),
 				hole=0.62,
 				textinfo="none",
-				hovertemplate="<b>%{label}</b><br>Count: %{value}<br>Share: %{percent}<extra></extra>",
+				hovertemplate="<b>%{label}</b><br>Count: %{value:,}<br>Share: %{percent}<extra></extra>",
 				marker=dict(colors=colors[: len(series)], line=dict(color=PALETTE["dark"], width=2)),
 				rotation=90,
 			),
@@ -395,18 +433,9 @@ def build_donut_chart(title: str, series: pd.Series, colors: list[str], subtitle
 		title=dict(text=title, x=0.03, xanchor="left", font=dict(size=18, color="#eef2f7")),
 		paper_bgcolor=PALETTE["panel"],
 		plot_bgcolor=PALETTE["panel"],
-		height=285,
-		margin=dict(l=8, r=8, t=48, b=10),
+		height=255,
+		margin=dict(l=8, r=8, t=34, b=8),
 		showlegend=False,
-		annotations=[
-			dict(
-				text=subtitle,
-				x=0.5,
-				y=0.5,
-				font=dict(size=13, color="#d5dbe8"),
-				showarrow=False,
-			),
-		],
 	)
 	return fig
 
@@ -474,10 +503,10 @@ def render_metric_cards(df: pd.DataFrame, snapshot: dict) -> None:
 			)
 
 
-def main() -> None:
+def render_analytics_page() -> None:
 	apply_theme()
 	df = load_data()
-	snapshot = train_model_snapshot(df)
+	snapshot = build_model_snapshot(df)
 
 	highlights = [
 		"EDA charts",
@@ -531,16 +560,15 @@ def main() -> None:
 				"",
 				gender_counts,
 				[PALETTE["pink"], PALETTE["violet"], PALETTE["cyan"], PALETTE["gold"], PALETTE["red"], "#1f2937"],
-				"Hover a slice for the exact count and share",
 			)
 			st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 		with col_b:
-			st.markdown("<div class='panel-title'>Match Outcome Distribution</div><div class='panel-subtitle'>Binary view of whether a match was successful</div>", unsafe_allow_html=True)
+			st.markdown("<div class='panel-title'>Match Outcome Distribution</div><div class='panel-subtitle'>Results of user matching interactions across outcome categories</div>", unsafe_allow_html=True)
+			outcome_counts = df["match_outcome"].value_counts().head(10)
 			fig = build_donut_chart(
 				"",
-				binary_outcome_counts.reindex(["Successful", "Not Successful"]).dropna(),
-				[PALETTE["pink"], PALETTE["red"]],
-				"Hover a slice for success / failure details",
+				outcome_counts,
+				[PALETTE["pink"], PALETTE["violet"], PALETTE["cyan"], PALETTE["gold"], PALETTE["red"], "#93c5fd", "#1f2937", "#7c2d12", "#4ade80", "#a855f7"],
 			)
 			st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
@@ -565,7 +593,7 @@ def main() -> None:
 			st.markdown("<div class='panel-title'>Dataset Snapshot</div><div class='panel-subtitle'>High-level insights extracted from the raw records</div>", unsafe_allow_html=True)
 			summary_rows = [
 				("Dominant gender", gender_counts.idxmax(), f"{gender_counts.max() / len(df) * 100:.1f}%"),
-				("Most common outcome", binary_outcome_counts.idxmax(), f"{binary_outcome_counts.max() / len(df) * 100:.1f}%"),
+				("Most common outcome", outcome_counts.idxmax(), f"{outcome_counts.max() / len(df) * 100:.1f}%"),
 				("Average app usage", f"{df['app_usage_time_min'].mean():.0f} min", "per user"),
 				("Average messages", f"{df['message_sent_count'].mean():.1f}", "per user"),
 				("Average active hour", f"{df['last_active_hour'].mean():.1f}", "24-hour clock"),
@@ -827,4 +855,11 @@ def main() -> None:
 		st.dataframe(df.head(12), use_container_width=True, height=330)
 
 
-main()
+if __name__ == "__main__":
+	st.set_page_config(
+		page_title="Data Insights Dashboard",
+		page_icon="📊",
+		layout="wide",
+		initial_sidebar_state="expanded",
+	)
+	render_analytics_page()
