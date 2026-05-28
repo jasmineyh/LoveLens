@@ -1,5 +1,19 @@
 import streamlit as st
 import pandas as pd
+import joblib
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+
+
+def resolve_asset_path(relative_path: Path | str) -> Path:
+    candidate = ROOT / Path(relative_path)
+    if candidate.exists():
+        return candidate
+    if Path(relative_path).exists():
+        return Path(relative_path)
+    raise FileNotFoundError(f"Asset not found: {relative_path}")
 
 # =====================================================
 # PAGE CONFIG
@@ -17,6 +31,16 @@ st.set_page_config(
 # =====================================================
 
 df = pd.read_csv("data/dating_app_behavior_dataset.csv")
+
+# =========================
+# LOAD MODEL FILES
+# =========================
+
+model = joblib.load(resolve_asset_path(Path("source_code") / "best_xgb_model.pkl"))
+scaler = joblib.load(resolve_asset_path(Path("source_code") / "scaler.pkl"))
+
+with open(resolve_asset_path(Path("source_code") / "model_columns.json"), "r") as f:
+    model_columns = json.load(f)
 
 # =====================================================
 # DATASET INFO
