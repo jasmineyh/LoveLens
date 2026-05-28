@@ -37,6 +37,15 @@ PALETTE = {
 }
 
 
+def hex_to_rgba(hex_color: str, alpha: float = 1.0) -> str:
+	"""Convert hex color like '#rrggbb' to 'rgba(r,g,b,a)'."""
+	h = hex_color.lstrip('#')
+	if len(h) == 3:
+		h = ''.join([c*2 for c in h])
+	r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+	return f"rgba({r}, {g}, {b}, {alpha})"
+
+
 def apply_theme() -> None:
 	st.markdown(
 		"""
@@ -473,42 +482,36 @@ def render_metric_cards(df: pd.DataFrame, snapshot: dict) -> None:
 			"label": "Total Records",
 			"value": f"{len(df):,}",
 			"note": "Dataset samples",
-			"icon": "📚",
 			"gradient": ("#5b21b6", "#ec4899"),
 		},
 		{
 			"label": "Features",
 			"value": f"{len(df.columns)}",
 			"note": "Input variables",
-			"icon": "🧩",
 			"gradient": ("#0ea5a4", "#7c3aed"),
 		},
 		{
 			"label": "Model Accuracy",
 			"value": f"{snapshot['accuracy'] * 100:.1f}%",
 			"note": "XGBoost snapshot",
-			"icon": "🎯",
 			"gradient": ("#0f172a", "#0ea5a4"),
 		},
 		{
 			"label": "Avg Swipe Ratio",
 			"value": f"{df['swipe_right_ratio'].mean():.2f}",
 			"note": "Behavioral engagement",
-			"icon": "↔️",
 			"gradient": ("#f97316", "#ef4444"),
 		},
 		{
 			"label": "Match Classes",
 			"value": f"{unique_outcomes}",
 			"note": "Outcome types",
-			"icon": "🔢",
 			"gradient": ("#7c3aed", "#06b6d4"),
 		},
 		{
 			"label": "Top Outcome",
 			"value": f"{dominant_outcome}",
 			"note": f"{dominant_share:.1f}% of records",
-			"icon": "⭐",
 			"gradient": ("#111827", "#4f46e5"),
 		},
 	]
@@ -516,12 +519,14 @@ def render_metric_cards(df: pd.DataFrame, snapshot: dict) -> None:
 	cols = st.columns(len(metrics), gap="small")
 	for col, metric in zip(cols, metrics):
 		grad_a, grad_b = metric["gradient"]
+		rgba_a = hex_to_rgba(grad_a, 0.4)
+		rgba_b = hex_to_rgba(grad_b, 0.4)
 		icon = metric["icon"]
 		label = metric["label"]
 		value = metric["value"]
 		note = metric["note"]
 		html = f"""
-		<div style="border-radius:14px;padding:14px;background:linear-gradient(135deg,{grad_a}, {grad_b});color:rgba(255,255,255,0.98);box-shadow:0 10px 30px rgba(2,6,23,0.6);">
+		<div style="border-radius:14px;padding:14px;background:linear-gradient(135deg,{rgba_a}, {rgba_b});color:rgba(255,255,255,0.98);box-shadow:0 10px 30px rgba(2,6,23,0.6);">
 			<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
 				<div style="font-size:0.84rem;font-weight:700;opacity:0.95;">{label}</div>
 				<div style="font-size:1.45rem;">{icon}</div>
@@ -554,9 +559,7 @@ def render_analytics_page() -> None:
 		    <div class="eyebrow" style="margin-bottom:0.7rem;">📊 Data Insights Dashboard</div>
 			<div class="hero-title">Visualization Analytics</div>
 			<div class="hero-copy">
-				Comprehensive exploratory data analysis and machine learning insights for the dating app behavior dataset.
-				Use this panel to inspect user composition, engagement patterns, model signals, correlation structure,
-				and feature influence from the same source data that powers the predictive workflow.
+				Comprehensive exploratory data analysis and machine learning insights for the dating app behavior dataset
 			</div>
 		</div>
 		""",
