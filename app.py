@@ -366,26 +366,55 @@ SCROLLBAR
 
 st.sidebar.title("LoveLens")
 
-page = st.sidebar.radio(
-    "Navigation",
-    [
-        "Home",
-        "Dataset Overview",
-        "Project Information"
-    ]
+view_mode = st.sidebar.radio(
+    "View Mode",
+    ["Navigation", "Dashboard Features"],
+    key="lovelens_view_mode",
 )
 
 st.sidebar.markdown("---")
 
-st.sidebar.markdown("""
-### Dashboard Features
+page = "Home"
 
-- Relationship Prediction
-- Dataset Analysis
-- Visualization Analytics
-- Model Evaluation
-- Machine Learning Insights
-""")
+if view_mode == "Navigation":
+    page = st.sidebar.radio(
+        "Navigation",
+        [
+            "Home",
+            "Dataset Overview",
+            "Project Information",
+        ],
+        key="lovelens_nav_page",
+    )
+else:
+    st.sidebar.markdown("### Dashboard Features")
+    feature_page = st.sidebar.radio(
+        "Select one feature",
+        [
+            "Relationship Prediction",
+            "Dataset Analysis",
+            "Visualization Analytics",
+            "Model Evaluation",
+            "Machine Learning Insights",
+        ],
+        key="lovelens_feature_page",
+    )
+
+    if feature_page == "Visualization Analytics":
+        st.switch_page("pages/analytics.py")
+        st.stop()
+
+    feature_to_page = {
+        "Relationship Prediction": "Home",
+        "Dataset Analysis": "Dataset Overview",
+        "Model Evaluation": "Project Information",
+        "Machine Learning Insights": "Project Information",
+    }
+    page = feature_to_page.get(feature_page, "Home")
+
+if view_mode == "Dashboard Features":
+    st.sidebar.markdown("---")
+    st.sidebar.caption("Only one feature is active at a time.")
 
 # =====================================================
 # HOME PAGE

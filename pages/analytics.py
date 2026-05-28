@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import plotly.graph_objects as go
 import streamlit as st
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
@@ -376,6 +377,40 @@ def figure_style(fig: plt.Figure) -> plt.Figure:
 	return fig
 
 
+def build_donut_chart(title: str, series: pd.Series, colors: list[str], subtitle: str) -> go.Figure:
+	fig = go.Figure(
+		data=[
+			go.Pie(
+				labels=series.index.tolist(),
+				values=series.values.tolist(),
+				hole=0.62,
+				textinfo="none",
+				hovertemplate="<b>%{label}</b><br>Count: %{value}<br>Share: %{percent}<extra></extra>",
+				marker=dict(colors=colors[: len(series)], line=dict(color=PALETTE["dark"], width=2)),
+				rotation=90,
+			),
+		]
+	)
+	fig.update_layout(
+		title=dict(text=title, x=0.03, xanchor="left", font=dict(size=18, color="#eef2f7")),
+		paper_bgcolor=PALETTE["panel"],
+		plot_bgcolor=PALETTE["panel"],
+		height=285,
+		margin=dict(l=8, r=8, t=48, b=10),
+		showlegend=False,
+		annotations=[
+			dict(
+				text=subtitle,
+				x=0.5,
+				y=0.5,
+				font=dict(size=13, color="#d5dbe8"),
+				showarrow=False,
+			),
+		],
+	)
+	return fig
+
+
 def render_donut(ax: plt.Axes, values: pd.Series, colors: list[str]) -> None:
 	ax.pie(
 		values.values,
@@ -456,18 +491,7 @@ def main() -> None:
 	st.markdown(
 		"""
 		<div class="hero-shell">
-		    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:0.8rem;flex-wrap:wrap;">
-		        <div class="eyebrow" style="margin-bottom:0;">🔒 Focus Mode</div>
-		        <div>
-		            """,
-		unsafe_allow_html=True,
-	)
-	st.page_link("app.py", label="← Return to Dashboard")
-	st.markdown(
-		"""
-		        </div>
-		    </div>
-		    <div class="eyebrow">📊 Data Insights Dashboard</div>
+		    <div class="eyebrow" style="margin-bottom:0.7rem;">📊 Data Insights Dashboard</div>
 			<div class="hero-title">Visualization Analytics</div>
 			<div class="hero-copy">
 				Comprehensive exploratory data analysis and machine learning insights for the dating app behavior dataset.
@@ -493,35 +517,32 @@ def main() -> None:
 	tabs = st.tabs(["Overview", "EDA", "Trends", "Correlation", "Feature Importance", "Dataset"])
 
 	gender_counts = df["gender"].value_counts()
-	outcome_counts = df["match_outcome"].value_counts().head(8)
+	match_binary = np.where(df["match_outcome"].astype(str).str.strip().eq("Mutual Match"), "Successful", "Not Successful")
+	binary_outcome_counts = pd.Series(match_binary).value_counts()
 	education_order = list(df["education_level"].dropna().value_counts().index)
 	swipe_order = ["Early Morning", "Morning", "Afternoon", "Evening", "Late Night", "After Midnight"]
 
 	with tabs[0]:
 		st.markdown("<div class='tab-note'>A compact overview of who is using the app, what outcomes are most common, and how the model performs on a realistic training snapshot.</div>", unsafe_allow_html=True)
-		col_a, col_b = st.columns([1, 1])
+		col_a, col_b = st.columns([0.92, 0.92])
 		with col_a:
 			st.markdown("<div class='panel-title'>Gender Distribution</div><div class='panel-subtitle'>Breakdown of user gender identities</div>", unsafe_allow_html=True)
-			fig, ax = plt.subplots(figsize=(5.8, 4.3))
-			render_donut(
-				ax,
+			fig = build_donut_chart(
+				"",
 				gender_counts,
 				[PALETTE["pink"], PALETTE["violet"], PALETTE["cyan"], PALETTE["gold"], PALETTE["red"], "#1f2937"],
+				"Hover a slice for the exact count and share",
 			)
-			figure_style(fig)
-			st.pyplot(fig, use_container_width=True)
-			plt.close(fig)
+			st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 		with col_b:
-			st.markdown("<div class='panel-title'>Match Outcome Distribution</div><div class='panel-subtitle'>Results of user matching interactions</div>", unsafe_allow_html=True)
-			fig, ax = plt.subplots(figsize=(5.8, 4.3))
-			render_donut(
-				ax,
-				outcome_counts,
-				[PALETTE["pink"], PALETTE["violet"], PALETTE["cyan"], PALETTE["gold"], PALETTE["red"], "#93c5fd", "#1f2937", "#7c2d12"],
+			st.markdown("<div class='panel-title'>Match Outcome Distribution</div><div class='panel-subtitle'>Binary view of whether a match was successful</div>", unsafe_allow_html=True)
+			fig = build_donut_chart(
+				"",
+				binary_outcome_counts.reindex(["Successful", "Not Successful"]).dropna(),
+				[PALETTE["pink"], PALETTE["red"]],
+				"Hover a slice for success / failure details",
 			)
-			figure_style(fig)
-			st.pyplot(fig, use_container_width=True)
-			plt.close(fig)
+			st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 		st.write("")
 		col_c, col_d = st.columns([1, 1])
@@ -544,7 +565,7 @@ def main() -> None:
 			st.markdown("<div class='panel-title'>Dataset Snapshot</div><div class='panel-subtitle'>High-level insights extracted from the raw records</div>", unsafe_allow_html=True)
 			summary_rows = [
 				("Dominant gender", gender_counts.idxmax(), f"{gender_counts.max() / len(df) * 100:.1f}%"),
-				("Most common outcome", outcome_counts.idxmax(), f"{outcome_counts.max() / len(df) * 100:.1f}%"),
+				("Most common outcome", binary_outcome_counts.idxmax(), f"{binary_outcome_counts.max() / len(df) * 100:.1f}%"),
 				("Average app usage", f"{df['app_usage_time_min'].mean():.0f} min", "per user"),
 				("Average messages", f"{df['message_sent_count'].mean():.1f}", "per user"),
 				("Average active hour", f"{df['last_active_hour'].mean():.1f}", "24-hour clock"),
