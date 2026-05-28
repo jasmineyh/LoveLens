@@ -1,5 +1,21 @@
 import streamlit as st
 import pandas as pd
+import joblib
+import json
+from pathlib import Path
+
+from pages.analytics import render_analytics_page
+
+ROOT = Path(__file__).resolve().parent
+
+
+def resolve_asset_path(relative_path: Path | str) -> Path:
+    candidate = ROOT / Path(relative_path)
+    if candidate.exists():
+        return candidate
+    if Path(relative_path).exists():
+        return Path(relative_path)
+    raise FileNotFoundError(f"Asset not found: {relative_path}")
 
 # =====================================================
 # PAGE CONFIG
@@ -17,6 +33,16 @@ st.set_page_config(
 # =====================================================
 
 df = pd.read_csv("data/dating_app_behavior_dataset.csv")
+
+# =========================
+# LOAD MODEL FILES
+# =========================
+
+model = joblib.load(resolve_asset_path(Path("source_code") / "best_xgb_model.pkl"))
+scaler = joblib.load(resolve_asset_path(Path("source_code") / "scaler.pkl"))
+
+with open(resolve_asset_path(Path("source_code") / "model_columns.json"), "r") as f:
+    model_columns = json.load(f)
 
 # =====================================================
 # DATASET INFO
@@ -55,9 +81,9 @@ REMOVE DEFAULT PADDING
 ===================================================== */
 
 .block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    max-width: 1400px;
+    padding-top: 1.25rem;
+    padding-bottom: 1.4rem;
+    max-width: 1220px;
 }
 
 /* =====================================================
@@ -78,30 +104,36 @@ section[data-testid="stSidebar"] * {
     color: white !important;
 }
 
+section[data-testid="stSidebar"] [data-testid="stSidebarNav"],
+section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"],
+section[data-testid="stSidebar"] nav {
+    display: none !important;
+}
+
 /* =====================================================
 HEADINGS
 ===================================================== */
 
 .main-title {
-    font-size: 68px;
+    font-size: 48px;
     font-weight: 800;
     color: white;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
     line-height: 1.1;
 }
 
 .section-title {
-    font-size: 38px;
+    font-size: 28px;
     font-weight: 700;
     color: white;
-    margin-bottom: 20px;
-    margin-top: 10px;
+    margin-bottom: 14px;
+    margin-top: 8px;
 }
 
 .sub-text {
     color: #dbe4f3;
-    font-size: 20px;
-    line-height: 1.9;
+    font-size: 16px;
+    line-height: 1.65;
 }
 
 /* =====================================================
@@ -113,13 +145,13 @@ HERO SECTION
 
     backdrop-filter: blur(12px);
 
-    padding: 65px;
+    padding: 36px;
 
-    border-radius: 32px;
+    border-radius: 26px;
 
     border: 1px solid rgba(255,255,255,0.08);
 
-    margin-bottom: 40px;
+    margin-bottom: 26px;
 
     box-shadow: 0px 10px 30px rgba(0,0,0,0.30);
 
@@ -138,9 +170,9 @@ METRIC CARDS
 .metric-card {
     background: rgba(15,23,42,0.82);
 
-    padding: 35px;
+    padding: 22px;
 
-    border-radius: 26px;
+    border-radius: 20px;
 
     border: 1px solid rgba(255,255,255,0.08);
 
@@ -164,14 +196,14 @@ METRIC CARDS
 }
 
 .metric-title {
-    font-size: 18px;
+    font-size: 14px;
     color: #dbe4f3;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     font-weight: 500;
 }
 
 .metric-value {
-    font-size: 48px;
+    font-size: 32px;
     font-weight: 800;
     color: white;
 }
@@ -183,9 +215,9 @@ INFO BOX
 .info-box {
     background: rgba(15,23,42,0.82);
 
-    padding: 42px;
+    padding: 28px;
 
-    border-radius: 28px;
+    border-radius: 22px;
 
     border: 1px solid rgba(255,255,255,0.08);
 
@@ -193,7 +225,7 @@ INFO BOX
 
     color: #e5e7eb;
 
-    line-height: 1.9;
+    line-height: 1.65;
 
     transition: all 0.35s ease;
 }
@@ -213,15 +245,15 @@ WORKFLOW BOX
 .workflow-box {
     background: rgba(30,41,59,0.90);
 
-    padding: 25px;
+    padding: 18px;
 
-    border-radius: 20px;
+    border-radius: 16px;
 
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 
     border-left: 6px solid #ff4f93;
 
-    font-size: 18px;
+    font-size: 15px;
 
     color: white;
 
@@ -255,9 +287,9 @@ STREAMLIT METRICS
 [data-testid="metric-container"] {
     background: rgba(15,23,42,0.82);
 
-    border-radius: 18px;
+    border-radius: 16px;
 
-    padding: 18px;
+    padding: 14px;
 
     border: 1px solid rgba(255,255,255,0.08);
 
@@ -273,11 +305,11 @@ STREAMLIT METRICS
 }
 
 [data-testid="metric-container"] label {
-    font-size: 15px !important;
+    font-size: 13px !important;
 }
 
 [data-testid="metric-container"] div {
-    font-size: 18px !important;
+    font-size: 15px !important;
 }
 
 /* =====================================================
@@ -315,8 +347,8 @@ TEXT
 ===================================================== */
 
 p, li {
-    font-size: 17px;
-    line-height: 1.8;
+    font-size: 15px;
+    line-height: 1.6;
     color: #e5e7eb;
 }
 
@@ -342,26 +374,55 @@ SCROLLBAR
 
 st.sidebar.title("LoveLens")
 
-page = st.sidebar.radio(
-    "Navigation",
-    [
-        "Home",
-        "Dataset Overview",
-        "Project Information"
-    ]
+view_mode = st.sidebar.radio(
+    "View Mode",
+    ["Navigation", "Dashboard Features"],
+    key="lovelens_view_mode",
 )
 
 st.sidebar.markdown("---")
 
-st.sidebar.markdown("""
-### Dashboard Features
+page = "Home"
 
-- Relationship Prediction
-- Dataset Analysis
-- Visualization Analytics
-- Model Evaluation
-- Machine Learning Insights
-""")
+if view_mode == "Navigation":
+    page = st.sidebar.radio(
+        "Navigation",
+        [
+            "Home",
+            "Dataset Overview",
+            "Project Information",
+        ],
+        key="lovelens_nav_page",
+    )
+else:
+    st.sidebar.markdown("### Dashboard Features")
+    feature_page = st.sidebar.radio(
+        "Select one feature",
+        [
+            "Relationship Prediction",
+            "Dataset Analysis",
+            "Visualization Analytics",
+            "Model Evaluation",
+            "Machine Learning Insights",
+        ],
+        key="lovelens_feature_page",
+    )
+
+    if feature_page == "Visualization Analytics":
+        render_analytics_page()
+        st.stop()
+
+    feature_to_page = {
+        "Relationship Prediction": "Home",
+        "Dataset Analysis": "Dataset Overview",
+        "Model Evaluation": "Project Information",
+        "Machine Learning Insights": "Project Information",
+    }
+    page = feature_to_page.get(feature_page, "Home")
+
+if view_mode == "Dashboard Features":
+    st.sidebar.markdown("---")
+    st.sidebar.caption("Only one feature is active at a time.")
 
 # =====================================================
 # HOME PAGE
@@ -376,25 +437,25 @@ if page == "Home":
         <style>
         .hero-container{
             background: rgba(255,255,255,0.06);
-            padding: 60px;
-            border-radius: 30px;
+            padding: 34px;
+            border-radius: 24px;
             border: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 35px;
+            margin-bottom: 24px;
         }
 
         .hero-heading{
-            font-size: 64px;
+            font-size: 42px;
             font-weight: 800;
             color: white;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             line-height: 1.1;
         }
 
         .hero-text{
-            font-size: 22px;
+            font-size: 16px;
             color: #e2e8f0;
-            line-height: 1.8;
-            max-width: 1000px;
+            line-height: 1.65;
+            max-width: 860px;
         }
         </style>
         """,
