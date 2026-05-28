@@ -302,68 +302,56 @@ def load_model_assets():
 
 
 def prepare_model_frame(data: pd.DataFrame, scaler, model_columns: list[str]) -> pd.DataFrame:
+	# Follow the original Notebook preprocessing so the produced feature matrix
+	# matches the saved `model_columns.json` and `scaler.pkl` used at training time.
 	frame = data.copy()
-	frame["interest_count"] = (
-		frame["interest_tags"]
-		.fillna("")
-		.astype(str)
-		.str.split(",")
-		.apply(lambda items: sum(1 for item in items if item.strip()))
-	)
-	frame["profile_richness"] = frame["profile_pics_count"].fillna(0) + (frame["bio_length"].fillna(0) / 100.0)
-	frame["engagement_efficiency"] = frame["mutual_matches"].fillna(0) / (frame["message_sent_count"].fillna(0) + 1)
-	frame["emoji_intensity"] = frame["emoji_usage_rate"].fillna(0) * (frame["message_sent_count"].fillna(0) + 1)
 
-	numeric_columns = model_columns[:13]
-	feature_frame = pd.DataFrame(index=frame.index)
-	feature_frame["app_usage_time_min"] = frame["app_usage_time_min"].fillna(0)
-	feature_frame["swipe_right_ratio"] = frame["swipe_right_ratio"].fillna(0)
-	feature_frame["likes_received"] = frame["likes_received"].fillna(0)
-	feature_frame["mutual_matches"] = frame["mutual_matches"].fillna(0)
-	feature_frame["profile_pics_count"] = frame["profile_pics_count"].fillna(0)
-	feature_frame["bio_length"] = frame["bio_length"].fillna(0)
-	feature_frame["message_sent_count"] = frame["message_sent_count"].fillna(0)
-	feature_frame["emoji_usage_rate"] = frame["emoji_usage_rate"].fillna(0)
-	feature_frame["last_active_hour"] = frame["last_active_hour"].fillna(0)
-	feature_frame["interest_count"] = frame["interest_count"].fillna(0)
-	feature_frame["profile_richness"] = frame["profile_richness"].fillna(0)
-	feature_frame["engagement_efficiency"] = frame["engagement_efficiency"].fillna(0)
-	feature_frame["emoji_intensity"] = frame["emoji_intensity"].fillna(0)
+	# Drop redundant label columns if present
+	columns_to_drop = ["app_usage_time_label", "swipe_right_label"]
+	frame = frame.drop(columns=[c for c in columns_to_drop if c in frame.columns], errors="ignore")
 
-	interest_labels = [column for column in model_columns if column in set(frame["interest_tags"].fillna("").astype(str).str.split(",").explode().str.strip())]
-	interest_tokens = set(frame["interest_tags"].fillna("").astype(str).str.split(",").explode().str.strip())
-	for label in [column for column in model_columns if column in interest_tokens or column in model_columns[13:]]:
-		if label in {"gender_Genderfluid", "gender_Male", "gender_Non-binary", "gender_Prefer Not to Say", "gender_Transgender", "sexual_orientation_Bisexual", "sexual_orientation_Demisexual", "sexual_orientation_Gay", "sexual_orientation_Lesbian", "sexual_orientation_Pansexual", "sexual_orientation_Queer", "sexual_orientation_Straight", "location_type_Remote Area", "location_type_Rural", "location_type_Small Town", "location_type_Suburban", "location_type_Urban", "income_bracket_Low", "income_bracket_Lower-Middle", "income_bracket_Middle", "income_bracket_Upper-Middle", "income_bracket_Very High", "income_bracket_Very Low", "education_level_Bachelor’s", "education_level_Diploma", "education_level_High School", "education_level_MBA", "education_level_Master’s", "education_level_No Formal Education", "education_level_PhD", "education_level_Postdoc", "swipe_time_of_day_Afternoon", "swipe_time_of_day_Early Morning", "swipe_time_of_day_Evening", "swipe_time_of_day_Late Night", "swipe_time_of_day_Morning"}:
-			continue
+	# Feature engineering (match Notebook.ipynb)
+	frame["interest_count"] = frame["interest_tags"].fillna("").astype(str).str.split(',').apply(lambda items: sum(1 for item in items if str(item).strip()))
+	frame["profile_richness"] = frame["bio_length"].fillna(0) + (frame["profile_pics_count"].fillna(0) * 50)
+	frame["engagement_efficiency"] = np.where(frame.get("likes_received", 0) > 0, frame["mutual_matches"].fillna(0) / frame["likes_received"].fillna(1), 0)
+	frame["emoji_intensity"] = frame["emoji_usage_rate"].fillna(0) * frame["message_sent_count"].fillna(0)
 
-	# One-hot columns from the raw categorical fields.
-	gender_dummies = pd.get_dummies(frame["gender"].fillna(""), prefix="gender")
-	orientation_dummies = pd.get_dummies(frame["sexual_orientation"].fillna(""), prefix="sexual_orientation")
-	location_dummies = pd.get_dummies(frame["location_type"].fillna(""), prefix="location_type")
-	income_dummies = pd.get_dummies(frame["income_bracket"].fillna(""), prefix="income_bracket")
-	education_dummies = pd.get_dummies(frame["education_level"].fillna(""), prefix="education_level")
-	time_dummies = pd.get_dummies(frame["swipe_time_of_day"].fillna(""), prefix="swipe_time_of_day")
-	interest_dummies = pd.DataFrame(0, index=frame.index, columns=[column for column in model_columns if column in model_columns[13:] and not column.startswith(("gender_", "sexual_orientation_", "location_type_", "income_bracket_", "education_level_", "swipe_time_of_day_"))])
-	for label in interest_dummies.columns:
-		interest_dummies[label] = frame["interest_tags"].fillna("").astype(str).str.contains(rf"(?<!\w){label}(?!\w)", regex=True).astype(int)
+	# Expand interest tags into binary indicators (sep=', ' as in notebook when creating dummies)
+	interests_expanded = frame["interest_tags"].fillna("").astype(str).str.get_dummies(sep=", ")
+	df_encoded = pd.concat([frame.drop(columns=["interest_tags"], errors="ignore"), interests_expanded], axis=1)
 
-	combined = pd.concat([
-		feature_frame,
-		interest_dummies,
-		gender_dummies,
-		orientation_dummies,
-		location_dummies,
-		income_dummies,
-		education_dummies,
-		time_dummies,
-	], axis=1)
+	# One-hot encode categorical features exactly as the notebook
+	categorical_cols = [
+		"gender",
+		"sexual_orientation",
+		"location_type",
+		"income_bracket",
+		"education_level",
+		"swipe_time_of_day",
+	]
+	df_final = pd.get_dummies(df_encoded, columns=[c for c in categorical_cols if c in df_encoded.columns], drop_first=True)
 
-	for column in model_columns:
-		if column not in combined.columns:
-			combined[column] = 0
-
+	# Ensure all model columns exist and in the right order
+	combined = df_final.copy()
+	for col in model_columns:
+		if col not in combined.columns:
+			combined[col] = 0
 	combined = combined.reindex(columns=model_columns)
-	combined[numeric_columns] = scaler.transform(combined[numeric_columns].astype(float))
+
+	# Numeric features list (same as notebook)
+	numeric_columns = [
+		'app_usage_time_min', 'swipe_right_ratio', 'likes_received', 'mutual_matches',
+		'profile_pics_count', 'bio_length', 'message_sent_count', 'emoji_usage_rate',
+		'last_active_hour', 'interest_count', 'profile_richness', 'engagement_efficiency', 'emoji_intensity'
+	]
+
+	# Apply scaler (expecting provided scaler fitted during training)
+	try:
+		combined[numeric_columns] = scaler.transform(combined[numeric_columns].astype(float))
+	except Exception:
+		# If scaler fails (missing columns or None), skip scaling but preserve columns
+		pass
+
 	return combined
 
 
@@ -479,28 +467,71 @@ def render_metric_cards(df: pd.DataFrame, snapshot: dict) -> None:
 	dominant_outcome = df["match_outcome"].value_counts().idxmax()
 	dominant_share = df["match_outcome"].value_counts(normalize=True).max() * 100
 
+	# Build a list of visually rich KPI cards (label, value, note, icon, gradient)
 	metrics = [
-		("Total Records", f"{len(df):,}", "Dataset samples"),
-		("Features", f"{len(df.columns)}", "Input variables"),
-		("Model Accuracy", f"{snapshot['accuracy'] * 100:.1f}%", "Random Forest snapshot"),
-		("Avg Swipe Ratio", f"{df['swipe_right_ratio'].mean():.2f}", "Behavioral engagement"),
-		("Match Classes", f"{unique_outcomes}", "Outcome types"),
-		("Top Outcome", dominant_outcome, f"{dominant_share:.1f}% of records"),
+		{
+			"label": "Total Records",
+			"value": f"{len(df):,}",
+			"note": "Dataset samples",
+			"icon": "📚",
+			"gradient": ("#5b21b6", "#ec4899"),
+		},
+		{
+			"label": "Features",
+			"value": f"{len(df.columns)}",
+			"note": "Input variables",
+			"icon": "🧩",
+			"gradient": ("#0ea5a4", "#7c3aed"),
+		},
+		{
+			"label": "Model Accuracy",
+			"value": f"{snapshot['accuracy'] * 100:.1f}%",
+			"note": "XGBoost snapshot",
+			"icon": "🎯",
+			"gradient": ("#0f172a", "#0ea5a4"),
+		},
+		{
+			"label": "Avg Swipe Ratio",
+			"value": f"{df['swipe_right_ratio'].mean():.2f}",
+			"note": "Behavioral engagement",
+			"icon": "↔️",
+			"gradient": ("#f97316", "#ef4444"),
+		},
+		{
+			"label": "Match Classes",
+			"value": f"{unique_outcomes}",
+			"note": "Outcome types",
+			"icon": "🔢",
+			"gradient": ("#7c3aed", "#06b6d4"),
+		},
+		{
+			"label": "Top Outcome",
+			"value": f"{dominant_outcome}",
+			"note": f"{dominant_share:.1f}% of records",
+			"icon": "⭐",
+			"gradient": ("#111827", "#4f46e5"),
+		},
 	]
 
-	cols = st.columns(6)
-	for col, (label, value, note) in zip(cols, metrics):
+	cols = st.columns(len(metrics), gap="small")
+	for col, metric in zip(cols, metrics):
+		grad_a, grad_b = metric["gradient"]
+		icon = metric["icon"]
+		label = metric["label"]
+		value = metric["value"]
+		note = metric["note"]
+		html = f"""
+		<div style="border-radius:14px;padding:14px;background:linear-gradient(135deg,{grad_a}, {grad_b});color:rgba(255,255,255,0.98);box-shadow:0 10px 30px rgba(2,6,23,0.6);">
+			<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+				<div style="font-size:0.84rem;font-weight:700;opacity:0.95;">{label}</div>
+				<div style="font-size:1.45rem;">{icon}</div>
+			</div>
+			<div style="font-size:1.65rem;font-weight:900;margin-top:8px;line-height:1;">{value}</div>
+			<div style="font-size:0.78rem;opacity:0.92;margin-top:6px;color:rgba(255,255,255,0.92);">{note}</div>
+		</div>
+		"""
 		with col:
-			st.markdown(
-				f"""
-				<div class="stat-card">
-					<div class="stat-label">{label}</div>
-					<div class="stat-value">{value}</div>
-					<div class="stat-note">{note}</div>
-				</div>
-				""",
-				unsafe_allow_html=True,
-			)
+			st.markdown(html, unsafe_allow_html=True)
 
 
 def render_analytics_page() -> None:
@@ -614,53 +645,54 @@ def render_analytics_page() -> None:
 		st.markdown("<div class='tab-note'>EDA charts focus on behavior and demographic slices to expose how engagement varies across user groups.</div>", unsafe_allow_html=True)
 		left, right = st.columns(2)
 		with left:
-			behavior_labels = ["Optimistic", "Balanced", "Choosy", "Swipe Maniac"]
-			edu_behavior = (
-				df.assign(education_level=pd.Categorical(df["education_level"], categories=education_order, ordered=True))
-				.groupby(["education_level", "swipe_right_label"])
-				.size()
-				.reset_index(name="count")
-			)
-			edu_behavior = edu_behavior[edu_behavior["swipe_right_label"].isin(behavior_labels)]
-			pivot = (
-				edu_behavior.pivot(index="education_level", columns="swipe_right_label", values="count")
-				.fillna(0)
-				.reindex(columns=behavior_labels)
-				.reindex(education_order)
-				.fillna(0)
-			)
-			fig, ax = plt.subplots(figsize=(6.4, 4.2))
-			bottom = np.zeros(len(pivot.index))
-			stack_colors = [PALETTE["pink"], PALETTE["violet"], PALETTE["cyan"], PALETTE["red"]]
-			for i, column in enumerate(pivot.columns):
-				values = pivot[column].values
-				ax.bar(pivot.index, values, bottom=bottom, color=stack_colors[i % len(stack_colors)], label=column)
-				bottom = bottom + values
-			ax.set_title("Swipe Behavior by Education", loc="left", fontsize=14, fontweight="bold", color="#eef2f7", pad=16)
-			ax.set_ylabel("Record count", color="#9ca5b9")
-			ax.tick_params(axis="x", rotation=32, labelcolor="#9ca5b9")
-			ax.grid(axis="y", color="white", alpha=0.08)
-			ax.legend(frameon=False, labelcolor="#cdd6e6", ncol=2)
-			figure_style(fig)
-			st.pyplot(fig, use_container_width=True)
-			plt.close(fig)
+				# Build stacked percentage bars of swipe behavior by education
+				# Determine the top 3 swipe behavior labels and group others as 'Other'
+				sr = df["swipe_right_label"].fillna("(unknown)")
+				top_labels = sr.value_counts().nlargest(3).index.tolist()
+				labels_order = top_labels + [l for l in ["Other"] if l not in top_labels]
+
+				edu = df.copy()
+				edu["swipe_group"] = edu["swipe_right_label"].fillna("(unknown)").apply(lambda v: v if v in top_labels else "Other")
+				edu["education_level"] = pd.Categorical(edu["education_level"], categories=education_order, ordered=True)
+				pivot = (
+					edu.groupby(["education_level", "swipe_group"]).size().unstack(fill_value=0).reindex(education_order).fillna(0)
+				)
+				# convert to percentage per education level
+				pivot_pct = pivot.div(pivot.sum(axis=1).replace(0, 1), axis=0) * 100
+
+				fig, ax = plt.subplots(figsize=(7.6, 4.6))
+				stack_colors = [PALETTE["pink"], PALETTE["cyan"], PALETTE["red"], "#374151"]
+				bottom = np.zeros(len(pivot_pct.index))
+				for i, col in enumerate(pivot_pct.columns):
+					vals = pivot_pct[col].values
+					ax.bar(pivot_pct.index, vals, bottom=bottom, color=stack_colors[i % len(stack_colors)], label=col, width=0.72)
+					bottom += vals
+				ax.set_title("Swipe Behavior by Education", loc="left", fontsize=16, fontweight="800", color="#eef2f7", pad=14)
+				ax.set_ylabel("% of users", color="#9ca5b9")
+				ax.set_ylim(0, 60)
+				ax.tick_params(axis="x", rotation=28, labelcolor="#9ca5b9")
+				ax.grid(axis="y", color="white", alpha=0.05)
+				ax.legend(frameon=False, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.18))
+				figure_style(fig)
+				st.pyplot(fig, use_container_width=True)
+				plt.close(fig)
 		with right:
 			location_summary = (
 				df.groupby("location_type")["mutual_matches"]
-				.agg(["count", "sum"])
+				.agg(["count", "sum"]) 
 				.rename(columns={"count": "users", "sum": "matches"})
 				.sort_values("users", ascending=False)
 			)
-			fig, ax = plt.subplots(figsize=(6.4, 4.2))
+			fig, ax = plt.subplots(figsize=(7.6, 4.6))
 			x = np.arange(len(location_summary.index))
-			width = 0.35
+			width = 0.38
 			ax.bar(x - width / 2, location_summary["users"], width, color=PALETTE["violet"], label="users")
 			ax.bar(x + width / 2, location_summary["matches"], width, color=PALETTE["pink"], label="matches")
 			ax.set_xticks(x)
 			ax.set_xticklabels(location_summary.index, color="#9ca5b9")
-			ax.set_title("Location Type Analysis", loc="left", fontsize=14, fontweight="bold", color="#eef2f7", pad=16)
+			ax.set_title("Location Type Analysis", loc="left", fontsize=16, fontweight="800", color="#eef2f7", pad=14)
 			ax.set_ylabel("Count", color="#9ca5b9")
-			ax.grid(axis="y", color="white", alpha=0.08)
+			ax.grid(axis="y", color="white", alpha=0.05)
 			ax.legend(frameon=False, labelcolor="#cdd6e6")
 			figure_style(fig)
 			st.pyplot(fig, use_container_width=True)
