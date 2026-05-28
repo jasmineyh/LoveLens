@@ -109,100 +109,116 @@ def apply_theme() -> None:
 			align-items: center;
 			padding: 0.42rem 0.8rem;
 			border-radius: 999px;
-			background: rgba(240,92,196,0.12);
-			color: #ff7ed7;
-			font-size: 0.82rem;
-			font-weight: 700;
-			letter-spacing: 0.02em;
-			margin-bottom: 0.7rem;
-		}
+			with tabs[1]:
+				st.markdown("<div class='tab-note'>EDA charts focus on meaningful rates and distributions (match rates, top interests among successful matches, and behavioral distributions).</div>", unsafe_allow_html=True)
+				# define success mapping aligned with the Notebook preprocessing
+				successful_outcomes = {"Date Happened", "Mutual Match", "Instant Match", "Relationship Formed"}
+				df = df.assign(is_success=df["match_outcome"].astype(str).str.strip().isin(successful_outcomes).astype(int))
 
-		.hero-title {
-			font-size: clamp(2rem, 3vw, 3.25rem);
-			font-weight: 900;
-			letter-spacing: -0.05em;
-			line-height: 1;
-			margin: 0 0 0.55rem 0;
-			color: #f8fafc;
-		}
+				# Match rate by Education
+				left, right = st.columns(2)
+				with left:
+					edu_df = df.copy()
+					edu_df["education_level"] = pd.Categorical(edu_df["education_level"], categories=education_order, ordered=True)
+					edu_rate = (
+						edu_df.groupby("education_level")["is_success"].mean().reindex(education_order).fillna(0) * 100
+					)
+					edu_rate = edu_rate.sort_values(ascending=False)
+					fig, ax = plt.subplots(figsize=(7.2, 4.6))
+					ax.barh(edu_rate.index, edu_rate.values, color=PALETTE["pink"])
+					ax.set_xlabel("Match Rate (%)", color="#9ca5b9")
+					ax.set_title("Match Rate by Education Level", loc="left", fontsize=16, fontweight=800, color="#eef2f7")
+					for i, v in enumerate(edu_rate.values):
+						ax.text(v + 0.6, i, f"{v:.1f}%", color="#e6edf3", va='center', fontweight=700)
+					figure_style(fig)
+					st.pyplot(fig, use_container_width=True)
+					plt.close(fig)
 
-		.hero-copy {
-			max-width: 860px;
-			color: #aeb6c9;
-			font-size: 0.94rem;
-			line-height: 1.6;
-			margin-bottom: 0.75rem;
-		}
+				# Match rate by Location (right)
+				with right:
+					loc_rate = (df.groupby("location_type")["is_success"].mean().sort_values(ascending=False) * 100).fillna(0)
+					fig, ax = plt.subplots(figsize=(7.2, 4.6))
+					ax.bar(loc_rate.index, loc_rate.values, color=[PALETTE["violet"] if v >= loc_rate.median() else PALETTE["pink"] for v in loc_rate.values])
+					ax.set_ylabel("Match Rate (%)", color="#9ca5b9")
+					ax.set_title("Match Rate by Location Type", loc="left", fontsize=16, fontweight=800, color="#eef2f7")
+					ax.set_ylim(0, min(100, loc_rate.max() * 1.08))
+					ax.tick_params(axis="x", rotation=22, labelcolor="#9ca5b9")
+					for i, v in enumerate(loc_rate.values):
+						ax.text(i, v + 0.8, f"{v:.1f}%", ha='center', color="#e6edf3", fontweight=700)
+					figure_style(fig)
+					st.pyplot(fig, use_container_width=True)
+					plt.close(fig)
 
-		.chip-row {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 0.65rem;
-			margin-top: 0.5rem;
-		}
+				st.write("")
+				# Top interests among successful matches and match rate by swipe time
+				lower_left, lower_right = st.columns(2)
+				with lower_left:
+					interests = (
+						df[df["is_success"] == 1]["interest_tags"].dropna().astype(str).str.split(",")
+						.explode().str.strip().replace("", np.nan).dropna()
+					)
+					top_success_interests = interests.value_counts().head(10)
+					fig, ax = plt.subplots(figsize=(7.2, 4.6))
+					render_horizontal_bars(ax, top_success_interests, PALETTE["cyan"])
+					ax.set_title("Top Interests Among Successful Matches", loc="left", fontsize=16, fontweight=800, color="#eef2f7")
+					figure_style(fig)
+					st.pyplot(fig, use_container_width=True)
+					plt.close(fig)
 
-		.feature-chip {
-			display: inline-flex;
-			align-items: center;
-			gap: 0.45rem;
-			padding: 0.55rem 0.85rem;
-			padding: 0.46rem 0.72rem;
-			border-radius: 999px;
-			background: rgba(255,255,255,0.045);
-			border: 1px solid rgba(255,255,255,0.06);
-			color: #dce2f0;
-			font-size: 0.8rem;
-			font-weight: 600;
-		}
+				with lower_right:
+					swipe_rate = (df.groupby("swipe_time_of_day")["is_success"].mean().reindex(swipe_order).fillna(0) * 100)
+					fig, ax = plt.subplots(figsize=(7.2, 4.6))
+					ax.plot(swipe_rate.index, swipe_rate.values, marker='o', color=PALETTE["gold"], linewidth=2.6)
+					ax.set_title("Match Rate by Time of Day", loc="left", fontsize=16, fontweight=800, color="#eef2f7")
+					ax.set_ylabel("Match Rate (%)", color="#9ca5b9")
+					ax.set_ylim(0, min(100, max(10, swipe_rate.max() * 1.12)))
+					ax.grid(axis="y", color="white", alpha=0.06)
+					for i, v in enumerate(swipe_rate.values):
+						ax.text(i, v + 0.8, f"{v:.1f}%", ha='center', color="#e6edf3", fontweight=700)
+					figure_style(fig)
+					st.pyplot(fig, use_container_width=True)
+					plt.close(fig)
 
-		.stat-card {
-			height: 100%;
-			border-radius: 22px;
-			padding: 0.82rem 0.85rem 0.75rem 0.85rem;
-			border: 1px solid rgba(255,255,255,0.06);
-			background: linear-gradient(135deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
-			box-shadow: 0 10px 24px rgba(0,0,0,0.2);
-		}
+				st.write("")
+				# Distributions and scatter analysis
+				dist_left, dist_right = st.columns(2)
+				with dist_left:
+					# ensure engagement_efficiency exists
+					if "engagement_efficiency" not in df.columns:
+						df["engagement_efficiency"] = np.where(df.get("likes_received", 0) > 0, df["mutual_matches"].fillna(0) / df["likes_received"].fillna(1), 0)
+					fig, ax = plt.subplots(figsize=(7.2, 4.4))
+					sns.histplot(df["app_usage_time_min"].dropna(), bins=40, kde=True, color=PALETTE["violet"], ax=ax)
+					ax.set_title("App Usage Time Distribution", loc="left", fontsize=15, fontweight=800, color="#eef2f7")
+					figure_style(fig)
+					st.pyplot(fig, use_container_width=True)
+					plt.close(fig)
 
-		.stat-label {
-			color: #9fa7ba;
-			font-size: 0.78rem;
-			font-weight: 600;
-			margin-bottom: 0.3rem;
-		}
+				with dist_right:
+					fig, ax = plt.subplots(figsize=(7.2, 4.4))
+					sns.kdeplot(df["engagement_efficiency"].dropna(), fill=True, color=PALETTE["cyan"], ax=ax)
+					ax.set_title("Engagement Efficiency Distribution", loc="left", fontsize=15, fontweight=800, color="#eef2f7")
+					figure_style(fig)
+					st.pyplot(fig, use_container_width=True)
+					plt.close(fig)
 
-		.stat-value {
-			color: #f8fafc;
-			font-size: 1.55rem;
-			font-weight: 900;
-			letter-spacing: -0.04em;
-			line-height: 1;
-			margin-bottom: 0.2rem;
-		}
-
-		.stat-note {
-			color: #98a1b5;
-			font-size: 0.74rem;
-		}
-
-		.panel-title {
-			font-size: 0.95rem;
-			font-weight: 800;
-			color: #f2f4f8;
-			margin-bottom: 0.25rem;
-			letter-spacing: -0.01em;
-		}
-
-		.panel-subtitle {
-			color: #8992a8;
-			font-size: 0.8rem;
-			margin-bottom: 0.8rem;
-			line-height: 1.45;
-		}
-
-		.bar-track {
-			height: 12px;
-			border-radius: 999px;
+				st.write("")
+				# Scatter: swipe_right_ratio vs mutual_matches with success overlay
+				fig, ax = plt.subplots(figsize=(10.2, 4.6))
+				sample = df.sample(min(4000, len(df)), random_state=42)
+				sc = ax.scatter(sample["swipe_right_ratio"], sample["mutual_matches"], c=sample["is_success"], cmap="RdYlBu", alpha=0.6, s=12)
+				# binned success rate
+				bins = np.linspace(0, 1, 11)
+				bin_idx = np.digitize(df["swipe_right_ratio"].fillna(0), bins) - 1
+				binned = pd.DataFrame({"bin": bin_idx, "is_success": df["is_success"]}).groupby("bin").mean()
+				xcenters = (bins[:-1] + bins[1:]) / 2
+				ax.plot(xcenters, binned["is_success"].values * df["mutual_matches"].max() , color=PALETTE["pink"], linewidth=2.2, label="Binned success trend (scaled)")
+				ax.set_xlabel("Swipe Right Ratio")
+				ax.set_ylabel("Mutual Matches")
+				ax.set_title("Swipe Ratio vs Mutual Matches (success overlay)", loc="left", fontsize=15, fontweight=800, color="#eef2f7")
+				ax.grid(alpha=0.06)
+				figure_style(fig)
+				st.pyplot(fig, use_container_width=True)
+				plt.close(fig)
 			background: rgba(255,255,255,0.06);
 			overflow: hidden;
 			margin-top: 0.55rem;
