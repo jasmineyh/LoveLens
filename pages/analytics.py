@@ -50,13 +50,18 @@ def apply_theme() -> None:
 	st.markdown(
 		"""
 		<style>
+		@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
 		.stApp {
 			background:
 				radial-gradient(circle at top left, rgba(240,92,196,0.14), transparent 28%),
 				radial-gradient(circle at top right, rgba(111,111,233,0.12), transparent 25%),
 				linear-gradient(180deg, #050816 0%, #070d19 38%, #08111e 100%);
 			color: #e5e7eb;
-			font-family: 'Segoe UI', 'Inter', sans-serif;
+			font-family: 'Manrope', 'Segoe UI', 'Aptos', sans-serif;
+			font-size: 16px;
+			line-height: 1.55;
+			-webkit-font-smoothing: antialiased;
+			text-rendering: optimizeLegibility;
 		}
 
 		.stApp::before {
@@ -75,6 +80,161 @@ def apply_theme() -> None:
 			padding-top: 1.15rem;
 			padding-bottom: 1.4rem;
 			max-width: 1320px;
+		}
+
+		.hero-title {
+			font-family: 'Space Grotesk', 'Manrope', sans-serif;
+			font-size: clamp(2rem, 3vw, 3.1rem);
+			font-weight: 700;
+			letter-spacing: -0.05em;
+			line-height: 0.98;
+			margin: 0.2rem 0 0.7rem 0;
+			color: #f8fafc;
+		}
+
+		.hero-copy {
+			max-width: 940px;
+			color: #b3bccf;
+			font-size: 0.98rem;
+			line-height: 1.7;
+			font-weight: 500;
+			margin-bottom: 0.9rem;
+		}
+
+		.eyebrow {
+			display: inline-flex;
+			gap: 0.45rem;
+			align-items: center;
+			padding: 0.42rem 0.8rem;
+			border-radius: 999px;
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			font-size: 0.78rem;
+			font-weight: 800;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: #ff7ed7;
+			background: rgba(240,92,196,0.08);
+			border: 1px solid rgba(240,92,196,0.16);
+		}
+
+		.feature-chip {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			font-size: 0.78rem;
+			font-weight: 700;
+			letter-spacing: 0.01em;
+			color: #dce2f0;
+			background: rgba(255,255,255,0.05);
+			border: 1px solid rgba(255,255,255,0.07);
+		}
+
+		.tab-note {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			font-size: 0.92rem;
+			font-weight: 500;
+			color: #a7b0c4;
+			line-height: 1.6;
+		}
+
+		.panel-title {
+			font-family: 'Space Grotesk', 'Manrope', sans-serif;
+			font-size: 1rem;
+			font-weight: 700;
+			letter-spacing: -0.02em;
+			color: #f2f4f8;
+			margin-bottom: 0.25rem;
+		}
+
+		.panel-subtitle {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			font-size: 0.86rem;
+			font-weight: 500;
+			color: #8f98ad;
+			margin-bottom: 0.85rem;
+			line-height: 1.55;
+		}
+
+		.stat-label {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			font-size: 0.75rem;
+			font-weight: 800;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: rgba(255,255,255,0.85);
+		}
+
+		.stat-value {
+			font-family: 'Space Grotesk', 'Manrope', sans-serif;
+			font-size: 1.7rem;
+			font-weight: 700;
+			letter-spacing: -0.04em;
+			margin-top: 0.35rem;
+		}
+
+		.stat-note {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			font-size: 0.76rem;
+			font-weight: 600;
+			color: rgba(255,255,255,0.78);
+			margin-top: 0.35rem;
+		}
+
+		[data-testid="stMarkdownContainer"] p,
+		[data-testid="stMarkdownContainer"] li {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			font-size: 0.94rem;
+			line-height: 1.65;
+			color: #d9e0ef;
+		}
+
+		[data-testid="stMetricLabel"] {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			font-size: 0.75rem !important;
+			font-weight: 700 !important;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: #aeb6c9 !important;
+		}
+
+		[data-testid="stMetricValue"] {
+			font-family: 'Space Grotesk', 'Manrope', sans-serif;
+			font-size: 1.9rem !important;
+			font-weight: 700 !important;
+			letter-spacing: -0.05em;
+			color: #f8fafc !important;
+		}
+
+		.stTabs [data-baseweb="tab-list"] {
+			border-radius: 999px;
+			padding: 0.2rem;
+			gap: 0.25rem;
+			background: rgba(8,12,22,0.76);
+			border: 1px solid rgba(255,255,255,0.05);
+		}
+
+		.stTabs [data-baseweb="tab"] {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
+			height: 2.5rem;
+			padding: 0 1rem;
+			border-radius: 999px;
+			font-size: 0.82rem;
+			font-weight: 700;
+			letter-spacing: 0.01em;
+			color: #97a0b4;
+		}
+
+		.stTabs [aria-selected="true"] {
+			background: linear-gradient(135deg, rgba(240,92,196,0.18), rgba(111,111,233,0.20));
+			color: #ffffff;
+		}
+
+		[data-testid="stDataFrame"] {
+			border-radius: 18px;
+			overflow: hidden;
+			border: 1px solid rgba(255,255,255,0.06);
+		}
+
+		[data-testid="stDataFrame"] * {
+			font-family: 'Manrope', 'Segoe UI', sans-serif;
 		}
 
 		[data-testid="stSidebar"] {
