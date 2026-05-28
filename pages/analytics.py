@@ -60,9 +60,18 @@ def apply_theme() -> None:
 		}
 
 		.block-container {
-			padding-top: 1.8rem;
-			padding-bottom: 2rem;
-			max-width: 1500px;
+			padding-top: 1.15rem;
+			padding-bottom: 1.4rem;
+			max-width: 1320px;
+		}
+
+		section[data-testid="stSidebar"],
+		div[data-testid="stSidebar"] {
+			display: none;
+		}
+
+		header[data-testid="stHeader"] {
+			display: none;
 		}
 
 		[data-testid="stSidebar"] {
@@ -75,18 +84,18 @@ def apply_theme() -> None:
 			overflow: hidden;
 			background: linear-gradient(135deg, rgba(16,24,43,0.9), rgba(8,12,24,0.92));
 			border: 1px solid rgba(255,255,255,0.06);
-			border-radius: 30px;
-			padding: 28px 30px 26px 30px;
-			box-shadow: 0 25px 70px rgba(0,0,0,0.32);
-			margin-bottom: 1.4rem;
+			border-radius: 26px;
+			padding: 20px 22px 18px 22px;
+			box-shadow: 0 18px 48px rgba(0,0,0,0.30);
+			margin-bottom: 1rem;
 		}
 
 		.hero-shell::after {
 			content: "";
 			position: absolute;
 			inset: auto -80px -110px auto;
-			width: 260px;
-			height: 260px;
+			width: 200px;
+			height: 200px;
 			background: radial-gradient(circle, rgba(240,92,196,0.34), transparent 70%);
 			filter: blur(10px);
 		}
@@ -99,34 +108,34 @@ def apply_theme() -> None:
 			border-radius: 999px;
 			background: rgba(240,92,196,0.12);
 			color: #ff7ed7;
-			font-size: 0.92rem;
+			font-size: 0.82rem;
 			font-weight: 700;
 			letter-spacing: 0.02em;
-			margin-bottom: 0.95rem;
+			margin-bottom: 0.7rem;
 		}
 
 		.hero-title {
-			font-size: clamp(2.5rem, 4vw, 4.6rem);
+			font-size: clamp(2rem, 3vw, 3.25rem);
 			font-weight: 900;
 			letter-spacing: -0.05em;
-			line-height: 0.96;
-			margin: 0 0 0.8rem 0;
+			line-height: 1;
+			margin: 0 0 0.55rem 0;
 			color: #f8fafc;
 		}
 
 		.hero-copy {
-			max-width: 980px;
+			max-width: 860px;
 			color: #aeb6c9;
-			font-size: 1.04rem;
-			line-height: 1.75;
-			margin-bottom: 1rem;
+			font-size: 0.94rem;
+			line-height: 1.6;
+			margin-bottom: 0.75rem;
 		}
 
 		.chip-row {
 			display: flex;
 			flex-wrap: wrap;
 			gap: 0.65rem;
-			margin-top: 0.8rem;
+			margin-top: 0.5rem;
 		}
 
 		.feature-chip {
@@ -134,18 +143,19 @@ def apply_theme() -> None:
 			align-items: center;
 			gap: 0.45rem;
 			padding: 0.55rem 0.85rem;
+			padding: 0.46rem 0.72rem;
 			border-radius: 999px;
 			background: rgba(255,255,255,0.045);
 			border: 1px solid rgba(255,255,255,0.06);
 			color: #dce2f0;
-			font-size: 0.9rem;
+			font-size: 0.8rem;
 			font-weight: 600;
 		}
 
 		.stat-card {
 			height: 100%;
 			border-radius: 22px;
-			padding: 1rem 1rem 0.95rem 1rem;
+			padding: 0.82rem 0.85rem 0.75rem 0.85rem;
 			border: 1px solid rgba(255,255,255,0.06);
 			background: linear-gradient(135deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
 			box-shadow: 0 10px 24px rgba(0,0,0,0.2);
@@ -153,27 +163,27 @@ def apply_theme() -> None:
 
 		.stat-label {
 			color: #9fa7ba;
-			font-size: 0.88rem;
+			font-size: 0.78rem;
 			font-weight: 600;
-			margin-bottom: 0.45rem;
+			margin-bottom: 0.3rem;
 		}
 
 		.stat-value {
 			color: #f8fafc;
-			font-size: 2.05rem;
+			font-size: 1.55rem;
 			font-weight: 900;
 			letter-spacing: -0.04em;
 			line-height: 1;
-			margin-bottom: 0.35rem;
+			margin-bottom: 0.2rem;
 		}
 
 		.stat-note {
 			color: #98a1b5;
-			font-size: 0.84rem;
+			font-size: 0.74rem;
 		}
 
 		.panel-title {
-			font-size: 1.02rem;
+			font-size: 0.95rem;
 			font-weight: 800;
 			color: #f2f4f8;
 			margin-bottom: 0.25rem;
@@ -182,9 +192,9 @@ def apply_theme() -> None:
 
 		.panel-subtitle {
 			color: #8992a8;
-			font-size: 0.92rem;
-			margin-bottom: 1rem;
-			line-height: 1.6;
+			font-size: 0.8rem;
+			margin-bottom: 0.8rem;
+			line-height: 1.45;
 		}
 
 		.bar-track {
@@ -221,13 +231,13 @@ def apply_theme() -> None:
 			background: rgba(8,12,22,0.72);
 			border: 1px solid rgba(255,255,255,0.05);
 			border-radius: 18px;
-			padding: 0.25rem;
+			padding: 0.18rem;
 		}
 
 		.stTabs [data-baseweb="tab"] {
-			height: 2.8rem;
+			height: 2.35rem;
 			border-radius: 14px;
-			padding: 0 1rem;
+			padding: 0 0.82rem;
 			background: transparent;
 			color: #98a1b5;
 			font-weight: 600;
@@ -241,14 +251,14 @@ def apply_theme() -> None:
 		[data-testid="stMetric"] {
 			background: rgba(15,22,38,0.88);
 			border: 1px solid rgba(255,255,255,0.06);
-			border-radius: 18px;
-			padding: 0.8rem 0.95rem;
+			border-radius: 16px;
+			padding: 0.65rem 0.8rem;
 			box-shadow: 0 10px 28px rgba(0,0,0,0.18);
 		}
 
 		[data-testid="stMetricLabel"] {
 			color: #9ca5b9;
-			font-size: 0.84rem;
+			font-size: 0.75rem;
 		}
 
 		[data-testid="stMetricValue"] {
@@ -261,6 +271,12 @@ def apply_theme() -> None:
 			border-radius: 18px;
 			overflow: hidden;
 			border: 1px solid rgba(255,255,255,0.06);
+		}
+
+		[data-testid="stMarkdownContainer"] p,
+		[data-testid="stMarkdownContainer"] li {
+			font-size: 0.92rem;
+			line-height: 1.55;
 		}
 		</style>
 		""",
@@ -440,7 +456,18 @@ def main() -> None:
 	st.markdown(
 		"""
 		<div class="hero-shell">
-			<div class="eyebrow">📊 Data Insights Dashboard</div>
+		    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:0.8rem;flex-wrap:wrap;">
+		        <div class="eyebrow" style="margin-bottom:0;">🔒 Focus Mode</div>
+		        <div>
+		            """,
+		unsafe_allow_html=True,
+	)
+	st.page_link("app.py", label="← Return to Dashboard")
+	st.markdown(
+		"""
+		        </div>
+		    </div>
+		    <div class="eyebrow">📊 Data Insights Dashboard</div>
 			<div class="hero-title">Visualization Analytics</div>
 			<div class="hero-copy">
 				Comprehensive exploratory data analysis and machine learning insights for the dating app behavior dataset.
@@ -475,7 +502,7 @@ def main() -> None:
 		col_a, col_b = st.columns([1, 1])
 		with col_a:
 			st.markdown("<div class='panel-title'>Gender Distribution</div><div class='panel-subtitle'>Breakdown of user gender identities</div>", unsafe_allow_html=True)
-			fig, ax = plt.subplots(figsize=(7, 5))
+			fig, ax = plt.subplots(figsize=(5.8, 4.3))
 			render_donut(
 				ax,
 				gender_counts,
@@ -486,7 +513,7 @@ def main() -> None:
 			plt.close(fig)
 		with col_b:
 			st.markdown("<div class='panel-title'>Match Outcome Distribution</div><div class='panel-subtitle'>Results of user matching interactions</div>", unsafe_allow_html=True)
-			fig, ax = plt.subplots(figsize=(7, 5))
+			fig, ax = plt.subplots(figsize=(5.8, 4.3))
 			render_donut(
 				ax,
 				outcome_counts,
@@ -553,7 +580,7 @@ def main() -> None:
 				.reindex(education_order)
 				.fillna(0)
 			)
-			fig, ax = plt.subplots(figsize=(8, 5))
+			fig, ax = plt.subplots(figsize=(6.4, 4.2))
 			bottom = np.zeros(len(pivot.index))
 			stack_colors = [PALETTE["pink"], PALETTE["violet"], PALETTE["cyan"], PALETTE["red"]]
 			for i, column in enumerate(pivot.columns):
@@ -575,7 +602,7 @@ def main() -> None:
 				.rename(columns={"count": "users", "sum": "matches"})
 				.sort_values("users", ascending=False)
 			)
-			fig, ax = plt.subplots(figsize=(8, 5))
+			fig, ax = plt.subplots(figsize=(6.4, 4.2))
 			x = np.arange(len(location_summary.index))
 			width = 0.35
 			ax.bar(x - width / 2, location_summary["users"], width, color=PALETTE["violet"], label="users")
@@ -604,7 +631,7 @@ def main() -> None:
 				.dropna()
 			)
 			top_interests = interest_tags.value_counts().head(8)
-			fig, ax = plt.subplots(figsize=(8, 5))
+			fig, ax = plt.subplots(figsize=(6.4, 4.2))
 			render_horizontal_bars(ax, top_interests, PALETTE["cyan"])
 			ax.set_title("Top Interest Tags", loc="left", fontsize=14, fontweight="bold", color="#eef2f7", pad=16)
 			ax.set_xlabel("Frequency", color="#9ca5b9")
@@ -618,7 +645,7 @@ def main() -> None:
 				.reindex(swipe_order)
 				.dropna()
 			)
-			fig, ax = plt.subplots(figsize=(8, 5))
+			fig, ax = plt.subplots(figsize=(6.4, 4.2))
 			ax.bar(match_time.index, match_time.values, color=PALETTE["gold"], alpha=0.9)
 			ax.set_title("Match Activity by Swipe Time", loc="left", fontsize=14, fontweight="bold", color="#eef2f7", pad=16)
 			ax.set_ylabel("Records", color="#9ca5b9")
@@ -637,7 +664,7 @@ def main() -> None:
 				.agg({"swipe_right_ratio": "mean", "mutual_matches": "mean", "message_sent_count": "mean"})
 				.sort_index()
 			)
-			fig, ax = plt.subplots(figsize=(8.5, 5))
+			fig, ax = plt.subplots(figsize=(6.8, 4.2))
 			ax.plot(hour_summary.index, hour_summary["swipe_right_ratio"] * 100, color=PALETTE["pink"], linewidth=2.6, marker="o", label="Swipe ratio")
 			ax.plot(hour_summary.index, hour_summary["mutual_matches"], color=PALETTE["violet"], linewidth=2.6, marker="s", label="Mutual matches")
 			ax.set_title("Engagement Trend by Hour", loc="left", fontsize=14, fontweight="bold", color="#eef2f7", pad=16)
@@ -655,7 +682,7 @@ def main() -> None:
 				.reindex(swipe_order)
 				.dropna()
 			)
-			fig, ax = plt.subplots(figsize=(8.5, 5))
+			fig, ax = plt.subplots(figsize=(6.8, 4.2))
 			x = np.arange(len(time_map.index))
 			ax.bar(x - 0.18, time_map["app_usage_time_min"], width=0.36, color=PALETTE["cyan"], label="App usage")
 			ax.bar(x + 0.18, time_map["likes_received"], width=0.36, color=PALETTE["gold"], label="Likes received")
@@ -686,7 +713,7 @@ def main() -> None:
 		corr = df[corr_cols].corr(numeric_only=True)
 		col_left, col_right = st.columns([1.05, 0.95])
 		with col_left:
-			fig, ax = plt.subplots(figsize=(9, 6.7))
+			fig, ax = plt.subplots(figsize=(8.0, 5.4))
 			sns.heatmap(
 				corr,
 				ax=ax,
@@ -725,7 +752,7 @@ def main() -> None:
 		feature_df = snapshot["features"].head(10).copy()
 		col_left, col_right = st.columns([1.08, 0.92])
 		with col_left:
-			fig, ax = plt.subplots(figsize=(9, 6))
+			fig, ax = plt.subplots(figsize=(7.2, 4.9))
 			render_horizontal_bars(ax, feature_df.set_index("feature")["importance"], PALETTE["pink"])
 			ax.set_title("Feature Importance", loc="left", fontsize=14, fontweight="bold", color="#eef2f7", pad=16)
 			ax.set_xlabel("Importance score", color="#9ca5b9")
