@@ -49,7 +49,7 @@ with open(resolve_asset_path(Path("source_code") / "model_columns.json"), "r") a
 # =====================================================
 
 total_records = df.shape[0]
-total_features = df.shape[1]
+a = df.shape[1]
 model_accuracy = 92.4
 
 # =====================================================
